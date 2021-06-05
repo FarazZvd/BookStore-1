@@ -16,18 +16,21 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls import url
-from books.views import BookViewSet, BookDetail, BookDelete, BookUpdate, BookSearch,CategoryBook
+from books.views import BookViewSet, BookDetail, BookDelete, BookUpdate, BookSearch, CategoryBook, OrdersViewSet, \
+    CategoryList
 from .views import ShoppingCart
 from .views import OwnerRegister
+
 urlpatterns = [
 
-    path(r'list/', BookViewSet.as_view({'get': 'list'}), name='book_lists'),
+    path(r'list/', BookViewSet.list, name='book_lists'),
     path(r'<int:id>/detail', BookDetail.as_view(), name='detail'),
     path(r'<int:id>/delete/', BookDelete.as_view(), name='delete'),
     path(r'<int:id>/edit/', BookUpdate.as_view(), name='update'),
     path(r'search/', BookSearch.as_view(), name='search'),
-    path(r'category/',CategoryBook.as_view({'get': 'list'}), name='category' ),
-    path('cart-items/', ShoppingCart.as_view()),
+    # path('cart-items/', ShoppingCart.as_view()),
+    path(r'categories/', CategoryList.list, name='categories'),
     path('register/', OwnerRegister, name='owner-register'),
+    path('orders', OrdersViewSet.get_queryset, name='OrdersViewSet'),
 
-    ]
+]

@@ -1,61 +1,76 @@
-
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Book, Category, BookCategory,User
+from .models import Book, Category, BookCategory, User, Order, Author
+
+
+class AuthorSerializer(serializers.ModelSerializer):
+    AName = serializers.CharField(max_length=23)
+
+    class Meta:
+        model = Author
+        fields = ['AName']
+
 
 class RegestrationSerializers(serializers.ModelSerializer):
-    password2 = serializers.CharField(style={'input_type' : 'passwords'}, write_only=True)
+    password2 = serializers.CharField(style={'input_type': 'passwords'}, write_only=True)
+
     class Meta:
         model = User
         fields = [
-                'username',
-                'email',
-                'password',
-                'password2',
-                'Num',
-                'Province',
-                'City',
-                'address',
-                'postal_code',
-            ]
+            'username',
+            'email',
+            'password',
+            'password2',
+            'Num',
+            'Province',
+            'City',
+            'address',
+            'postal_code',
+        ]
         extra_kwargs = {
-                'password' : {'write_only' : True}
+            'password': {'write_only': True}
         }
 
     def save(self):
         account = User(
-            email    = self.validated_data['email'],
-            username = self.validated_data['username'],
-            Num = self.validated_data['Num'],
-            City = self.validated_data['City'],
-            Province = self.validated_data['Province'],
-            address = self.validated_data['address'],
-            postal_code = self.validated_data['postal_code'],
+            email=self.validated_data['email'],
+            username=self.validated_data['username'],
+            Num=self.validated_data['Num'],
+            City=self.validated_data['City'],
+            Province=self.validated_data['Province'],
+            address=self.validated_data['address'],
+            postal_code=self.validated_data['postal_code'],
         )
         password = self.validated_data['password']
         password2 = self.validated_data['password2']
 
         if password != password2:
-            raise serializers.ValidationError({'password' : 'پسوورد ها باید یکسان باشد'})
+            raise serializers.ValidationError({'password': 'پسوورد ها باید یکسان باشد'})
         account.set_password(password)
         account.save()
         return account
 
 
-
-
 class BookSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(max_length=None, use_url=True)
+    image_url = serializers.SerializerMethodField('get_image_url')
+    author_name = AuthorSerializer(many=True)
 
     class Meta:
         model = Book
-        fields = ['id', 'name', 'publisher', 'author', 'summery', 'rating','Year','Price','Edition', 'image', 'created_at', 'updated_at']
+        fields = ['book_id', 'name', 'publisher', 'author_name', 'summery', 'rating', 'Year', 'Price', 'Edition',
+                  'image_url', 'image', 'created_at', 'updated_at']
+
+    def get_image_url(self, obj):
+        return "http://127.0.0.1:8000" + obj.image.url
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    books = BookSerializer(many=True)
+
     class Meta:
         model = Category
-        fields = ['id', 'name', 'description', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'books', 'created_at', 'updated_at']
 
 
 class BookCategorySerializer(serializers.ModelSerializer):
@@ -63,7 +78,14 @@ class BookCategorySerializer(serializers.ModelSerializer):
         model = BookCategory
         fields = ['id', 'book', 'category', 'created_at', 'updated_at']
 
+
 class CategoryBookSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BookCategory,Category
+        model = BookCategory, Category
         fields = ['book', 'category']
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['OID', 'Costumer', 'Of_Cart', 'cost', 'status', 'address', 'postalCode', 'created_at', 'updated_at']
